@@ -235,8 +235,6 @@ class FacebookSpider(scrapy.Spider):
      #   new.add_xpath('date','//div/div/abbr/text()')
         new.add_xpath('text','//div[@data-ft]//p//text() | //div[@data-ft]/div[@class]/div[@class]/text()')
         new.add_xpath('link',"//div//a[contains(@href, '://')]/@href")
-        print("loo++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++oool")
-#new.add_xpath('reactions', "//a[contains(@href,'reaction/profile')]/div/div/text()")
 
         #check reactions for old posts
         check_reactions = response.xpath("//a[contains(@href,'reaction/profile')]/div/div/text()").get()
