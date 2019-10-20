@@ -81,6 +81,14 @@ def url_strip(url):
             else:
                 return fullurl
 
+def link_following(link):
+    '''
+    Function for following provided links.
+    :param link:
+    :return:
+    '''
+    return link[0]
+
 def parse_date(date,loader_context):
     import json
 
@@ -571,6 +579,9 @@ class FbcrawlItem(scrapy.Item):
     text = scrapy.Field(
         output_processor=Join(separator=u'')
     )                       # full text of the post
+    link = scrapy.Field(
+        output_processor=link_following
+    )
     comments = scrapy.Field(
         output_processor=comments_strip
     )

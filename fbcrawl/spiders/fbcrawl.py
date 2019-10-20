@@ -13,7 +13,7 @@ class FacebookSpider(scrapy.Spider):
     '''    
     name = 'fb'
     custom_settings = {
-        'FEED_EXPORT_FIELDS': ['source','shared_from','date','text', \
+        'FEED_EXPORT_FIELDS': ['source','shared_from','date','text', 'link',\
                                'reactions','likes','ahah','love','wow', \
                                'sigh','grrr','comments','post_id','url'],
         'DUPEFILTER_CLASS' : 'scrapy.dupefilters.BaseDupeFilter',
@@ -234,7 +234,10 @@ class FacebookSpider(scrapy.Spider):
         new.add_xpath('shared_from','//div[contains(@data-ft,"top_level_post_id") and contains(@data-ft,\'"isShare":1\')]/div/div[3]//strong/a/text()')
      #   new.add_xpath('date','//div/div/abbr/text()')
         new.add_xpath('text','//div[@data-ft]//p//text() | //div[@data-ft]/div[@class]/div[@class]/text()')
-        
+        new.add_xpath('link',"//div//a[contains(@href, '://')]/@href")
+        print("loo++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++oool")
+#new.add_xpath('reactions', "//a[contains(@href,'reaction/profile')]/div/div/text()")
+
         #check reactions for old posts
         check_reactions = response.xpath("//a[contains(@href,'reaction/profile')]/div/div/text()").get()
         if not check_reactions:
