@@ -239,15 +239,17 @@ class FacebookSpider(scrapy.Spider):
 
 
         # Crawling links that lead to external websites
-        internal_link = response.xpath("//div//a[contains(@href, '://')]/@href").get()
-        internal_redirection_page = requests.get(internal_link)
-        internal_redirection_page_content = internal_redirection_page.content.decode("utf-8").replace('\\', '')
-        # find first link-like substring in content of the redirecting page (it includes links that get replaced like
-        # "https://trib.al/<some_shortened_link>":
-        shortened_external_link = re.findall('https:[a-zA-Z0-9/.?=\n_]*', internal_redirection_page_content)[0]     # find first link-like substring in content
-        external_link = requests.get(shortened_external_link).url
-        new.add_value('link', external_link)
-
+        try:
+            internal_link = response.xpath("//div//a[contains(@href, '://')]/@href").get()
+            internal_redirection_page = requests.get(internal_link)
+            internal_redirection_page_content = internal_redirection_page.content.decode("utf-8").replace('\\', '')
+            # find first link-like substring in content of the redirecting page (it includes links that get replaced like
+            # "https://trib.al/<some_shortened_link>":
+            shortened_external_link = re.findall('https:[a-zA-Z0-9/.?=\n_]*', internal_redirection_page_content)[0]     # find first link-like substring in content
+            external_link = requests.get(shortened_external_link).url
+            new.add_value('link', external_link)
+        except:
+            new.add_value('link', '')
 
         #check reactions for old posts
         check_reactions = response.xpath("//a[contains(@href,'reaction/profile')]/div/div/text()").get()
