@@ -1,23 +1,25 @@
 #!/usr/bin/env bash
 
-OLD=$PWD
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-
 cd $DIR
 
-if [ -d "/usr/local/crawler-venv" ]
-then
-  source /usr/local/crawler-venv/bin/activate
-fi
+source credentials.txt
+source sites.txt
 
-FOLDER=$(date +"%Y-%m")
-mkdir -p "$OLD/$FOLDER"
+TIME=$(date +"%Y-%m-%d_%H-%M")
+DATE=$(date +"%Y-%m-%d")
 
-DAY=$(date +"%d")
-mkdir -p "$OLD/$FOLDER/$DAY/facebook"
+for site in $sites
+do
+    echo " "
+    echo "************* Current page: $site ***************************************"
+    mkdir -p "../res/$site/"
+   
+    scrapy crawl fb -a email="$FACEBOOK_EMAIL" -a password="$FACEBOOK_PASSWORD" -a page="$site" -a lang="en" -o "../res/$site/posts/$TIME.csv" -a date="$DATE" 
+    
+    scrapy crawl comments -a email="$FACEBOOK_EMAIL" -a password="$FACEBOOK_PASSWORD" -a page="$site" -a lang="en" -o "../res/$site/comments/$TIME.csv" -a date="$DATE" 
 
-TIME=$(date +"%s")
+done
 
-source ~/.secrets
-
-scrapy crawl events -a email="$FACEBOOK_EMAIL" -a password="$FACEBOOK_PASSWORD" -a page="$1" -o "$OLD/$FOLDER/$DAY/facebook/$TIME_$1.csv"
+echo " "
+echo "************* finished. ****************************************************"
