@@ -8,6 +8,7 @@
 import scrapy
 from scrapy.loader.processors import TakeFirst, Join, MapCompose
 from datetime import datetime, timedelta
+import requests
 
 def comments_strip(string,loader_context):
     lang = loader_context['lang']
@@ -81,13 +82,20 @@ def url_strip(url):
             else:
                 return fullurl
 
-def link_following(link):
+def link_cleaning(link):
     '''
-    Function for following provided links.
+    Function for cleaning provided links from parameters.
     :param link:
-    :return:
+    :return: cleaned link
     '''
-    return link[0]
+    link_to_clean = link[0]
+
+    # remove queries on link
+    try:
+        return link_to_clean.split("?")[0]
+    except:
+        return link_to_clean
+
 
 def parse_date(date,loader_context):
     import json
@@ -580,7 +588,7 @@ class FbcrawlItem(scrapy.Item):
         output_processor=Join(separator=u'')
     )                       # full text of the post
     link = scrapy.Field(
-        output_processor=link_following
+        output_processor=link_cleaning
     )
     comments = scrapy.Field(
         output_processor=comments_strip
