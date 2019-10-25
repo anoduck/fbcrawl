@@ -1,5 +1,7 @@
 import scrapy
 import logging
+import requests
+import re
 
 from scrapy.loader import ItemLoader
 from scrapy.http import FormRequest
@@ -232,9 +234,20 @@ class FacebookSpider(scrapy.Spider):
         new.context['lang'] = self.lang           
         new.add_xpath('source', "//td/div/h3/strong/a/text() | //span/strong/a/text() | //div/div/div/a[contains(@href,'post_id')]/strong/text()")
         new.add_xpath('shared_from','//div[contains(@data-ft,"top_level_post_id") and contains(@data-ft,\'"isShare":1\')]/div/div[3]//strong/a/text()')
-     #   new.add_xpath('date','//div/div/abbr/text()')
+        # new.add_xpath('date','//div/div/abbr/text()')
         new.add_xpath('text','//div[@data-ft]//p//text() | //div[@data-ft]/div[@class]/div[@class]/text()')
-        new.add_xpath('link',"//div//a[contains(@href, '://')]/@href")
+
+
+        # Crawling links that lead to external websites
+        internal_link = response.xpath("//div//a[contains(@href, '://')]/@href").get()
+        internal_redirection_page = requests.get(internal_link)
+        internal_redirection_page_content = internal_redirection_page.content.decode("utf-8").replace('\\', '')
+        # find first link-like substring in content of the redirecting page (it includes links that get replaced like
+        # "https://trib.al/<some_shortened_link>":
+        shortened_external_link = re.findall('https:[a-zA-Z0-9/.?=\n_]*', internal_redirection_page_content)[0]     # find first link-like substring in content
+        external_link = requests.get(shortened_external_link).url
+        new.add_value('link', external_link)
+
 
         #check reactions for old posts
         check_reactions = response.xpath("//a[contains(@href,'reaction/profile')]/div/div/text()").get()
