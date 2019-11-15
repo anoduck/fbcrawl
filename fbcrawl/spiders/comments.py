@@ -14,7 +14,7 @@ class CommentsSpider(FacebookSpider):
     name = "comments"
     custom_settings = {
         'FEED_EXPORT_FIELDS': ['source','reply_to','date','reactions','text', \
-                               'source_url','url'],
+                               'source_url','post_id','url'],
         'DUPEFILTER_CLASS' : 'scrapy.dupefilters.BaseDupeFilter',
         'CONCURRENT_REQUESTS' : 1
     }
@@ -34,10 +34,15 @@ class CommentsSpider(FacebookSpider):
         '''
         '''
         if self.type == 'post':
+            try:
+                post_id = response.xpath("//div[contains(@data-ft,'top_level_post_id')]//@data-ft")
+            except:
+                post_id = 'None'
             yield scrapy.Request(url=response.url,
                                  callback=self.parse_post,
                                  priority=10,
-                                 meta={'index':1})
+                                 meta={'index':1,
+                                       'post_id':post_id})
         elif self.type == 'page':
             #select all posts
             for post in response.xpath("//div[contains(@data-ft,'top_level_post_id')]"):     
@@ -64,7 +69,8 @@ class CommentsSpider(FacebookSpider):
                 yield scrapy.Request(temp_post, 
                                      self.parse_post, 
                                      priority = self.count,
-                                     meta={'index':1})
+                                     meta={'index':1,
+                                           'post_id':many_features})
     
             #load following page, try to click on "more"
             #after few pages have been scraped, the "more" link might disappears 
@@ -135,6 +141,12 @@ class CommentsSpider(FacebookSpider):
         #load replied-to comments pages
         #select nested comment one-by-one matching with the index: response.meta['index']
         path = './/div[string-length(@class) = 2 and count(@id)=1 and contains("0123456789", substring(@id,1,1)) and .//div[contains(@id,"comment_replies")]]'  + '['+ str(response.meta['index']) + ']'
+        post_id = response.meta['post_id']
+        #  try:
+            #  post_div = response.xpath('//div[contains(@data-ft,"top_level_post_id")]')
+            #  many_features = post_div.xpath('./@data-ft').get()
+        #  except Exception:
+            #  many_features = ''
         group_flag = response.meta['group'] if 'group' in response.meta else None
 
         for reply in response.xpath(path):
@@ -149,6 +161,7 @@ class CommentsSpider(FacebookSpider):
                                        'url':response.url,
                                        'index':response.meta['index'],
                                        'flag':'init',
+                                       'post_id':response.meta['post_id'],
                                        'group':group_flag})
         #load regular comments     
         if not response.xpath(path): #prevents from exec
@@ -162,6 +175,7 @@ class CommentsSpider(FacebookSpider):
                 new.add_xpath('text','.//div[h3]/div[1]//text()')
                 new.add_xpath('date','.//abbr/text()')
                 new.add_xpath('reactions','.//a[contains(@href,"reaction/profile")]//text()')
+                new.add_value('post_id', post_id)
                 new.add_value('url',response.url)
                 yield new.load_item()
             
@@ -178,6 +192,7 @@ class CommentsSpider(FacebookSpider):
                     yield scrapy.Request(new_page,
                                          callback=self.parse_post,
                                          meta={'index':1,
+                                               'post_id': post_id,
                                                'group':1})        
             else:
                 for next_page in response.xpath(next_xpath):
@@ -187,6 +202,7 @@ class CommentsSpider(FacebookSpider):
                     yield scrapy.Request(new_page,
                                          callback=self.parse_post,
                                          meta={'index':1,
+                                               'post_id':post_id,
                                                'group':group_flag})        
         
     def parse_reply(self,response):
@@ -207,6 +223,7 @@ class CommentsSpider(FacebookSpider):
                 new.add_xpath('text','.//div[1]//text()')
                 new.add_xpath('date','.//abbr/text()')
                 new.add_xpath('reactions','.//a[contains(@href,"reaction/profile")]//text()')
+                new.add_value('post_id', response.meta['post_id'])
                 new.add_value('url',response.url)
                 yield new.load_item()
             #parse all replies in the page
@@ -219,6 +236,7 @@ class CommentsSpider(FacebookSpider):
                 new.add_xpath('text','.//div[h3]/div[1]//text()')
                 new.add_xpath('date','.//abbr/text()')
                 new.add_xpath('reactions','.//a[contains(@href,"reaction/profile")]//text()')
+                new.add_value('post_id', response.meta['post_id'])
                 new.add_value('url',response.url)   
                 yield new.load_item()
                 
@@ -233,6 +251,7 @@ class CommentsSpider(FacebookSpider):
                                            'flag':'back',
                                            'url':response.meta['url'],
                                            'index':response.meta['index'],
+                                           'post_id':response.meta['post_id'],
                                            'group':response.meta['group']})
 
             else:
@@ -241,6 +260,7 @@ class CommentsSpider(FacebookSpider):
                 yield scrapy.Request(next_reply,
                                      callback=self.parse_post,
                                      meta={'index':response.meta['index']+1,
+                                           'post_id':response.meta['post_id'],
                                            'group':response.meta['group']})
                 
         elif response.meta['flag'] == 'back':
@@ -254,6 +274,7 @@ class CommentsSpider(FacebookSpider):
                 new.add_xpath('text','.//div[h3]/div[1]//text()')
                 new.add_xpath('date','.//abbr/text()')
                 new.add_xpath('reactions','.//a[contains(@href,"reaction/profile")]//text()')
+                new.add_value('post_id', response.meta['post_id'])
                 new.add_value('url',response.url)   
                 yield new.load_item()
             #keep going backwards
@@ -268,6 +289,7 @@ class CommentsSpider(FacebookSpider):
                                            'flag':'back',
                                            'url':response.meta['url'],
                                            'index':response.meta['index'],
+                                           'post_id':response.meta['post_id'],
                                            'group':response.meta['group']})
 
             else:
@@ -276,6 +298,7 @@ class CommentsSpider(FacebookSpider):
                 yield scrapy.Request(next_reply,
                                      callback=self.parse_post,
                                      meta={'index':response.meta['index']+1,
+                                           'post_id':response.meta['post_id'],
                                            'group':response.meta['group']})
                 
 # =============================================================================
