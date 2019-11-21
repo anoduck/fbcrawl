@@ -34,10 +34,9 @@ class CommentsSpider(FacebookSpider):
         '''
         '''
         if self.type == 'post':
-            try:
-                post_id = response.xpath("//div[contains(@data-ft,'top_level_post_id')]//@data-ft")
-            except:
-                post_id = 'None'
+            post_id = response.xpath("//div[contains(@data-ft,'top_level_post_id')]//@data-ft").get()
+            if post_id is None:
+                post_id = '{"top_level_post_id":"' + str(response.url) + '"}'
             yield scrapy.Request(url=response.url,
                                  callback=self.parse_post,
                                  priority=10,
@@ -140,8 +139,25 @@ class CommentsSpider(FacebookSpider):
         '''
         #load replied-to comments pages
         #select nested comment one-by-one matching with the index: response.meta['index']
+        self.logger.info(response.url)
         path = './/div[string-length(@class) = 2 and count(@id)=1 and contains("0123456789", substring(@id,1,1)) and .//div[contains(@id,"comment_replies")]]'  + '['+ str(response.meta['index']) + ']'
-        post_id = response.meta['post_id']
+        #  testpath = './/div[string-length(@class) = 2 and count(@id)=1 and contains("0123456789", substring(@id,1,1)) and .//div[contains(@id,"comment_replies")]][1]'
+        testpath = './/div[string-length(@class) = 2 and count(@id)=1 and contains("0123456789", substring(@id,1,1))]/@id'
+        bomb = 0
+        try:
+            if response.xpath(testpath) != []:
+                self.logger.info(response.meta['testpath'])
+                self.logger.info(response.xpath(testpath).extract())
+                if response.meta['testpath'] == response.xpath(testpath).extract():
+                    bomb = 1
+        except Exception:
+            self.logger.info('seems ok to continue')
+        try:
+            self.logger.info(response.meta['post_id'])
+            post_id = response.meta['post_id']
+        except Exception:
+            self.logger.info('single post')
+        testpath = response.xpath(testpath).extract()
         #  try:
             #  post_div = response.xpath('//div[contains(@data-ft,"top_level_post_id")]')
             #  many_features = post_div.xpath('./@data-ft').get()
@@ -149,61 +165,64 @@ class CommentsSpider(FacebookSpider):
             #  many_features = ''
         group_flag = response.meta['group'] if 'group' in response.meta else None
 
-        for reply in response.xpath(path):
-            source = reply.xpath('.//h3/a/text()').extract()
-            answer = reply.xpath('.//a[contains(@href,"repl")]/@href').extract()
-            ans = response.urljoin(answer[::-1][0])
-            self.logger.info('{} nested comment'.format(str(response.meta['index'])))
-            yield scrapy.Request(ans,
-                                 callback=self.parse_reply,
-                                 priority=1000,
-                                 meta={'reply_to':source,
-                                       'url':response.url,
-                                       'index':response.meta['index'],
-                                       'flag':'init',
-                                       'post_id':response.meta['post_id'],
-                                       'group':group_flag})
-        #load regular comments     
-        if not response.xpath(path): #prevents from exec
-            path2 = './/div[string-length(@class) = 2 and count(@id)=1 and contains("0123456789", substring(@id,1,1)) and not(.//div[contains(@id,"comment_replies")])]'
-            for i,reply in enumerate(response.xpath(path2)):
-                self.logger.info('{} regular comment'.format(i+1))
-                new = ItemLoader(item=CommentsItem(),selector=reply)
-                new.context['lang'] = self.lang           
-                new.add_xpath('source','.//h3/a/text()')  
-                new.add_xpath('source_url','.//h3/a/@href')   
-                new.add_xpath('text','.//div[h3]/div[1]//text()')
-                new.add_xpath('date','.//abbr/text()')
-                new.add_xpath('reactions','.//a[contains(@href,"reaction/profile")]//text()')
-                new.add_value('post_id', post_id)
-                new.add_value('url',response.url)
-                yield new.load_item()
-            
-        #new comment page
-        if not response.xpath(path):
-            #for groups
-            next_xpath = './/div[contains(@id,"see_next")]'
-            prev_xpath = './/div[contains(@id,"see_prev")]'
-            if not response.xpath(next_xpath) or group_flag == 1:
-                for next_page in response.xpath(prev_xpath):
-                    new_page = next_page.xpath('.//@href').extract()
-                    new_page = response.urljoin(new_page[0])
-                    self.logger.info('New page to be crawled {}'.format(new_page))
-                    yield scrapy.Request(new_page,
-                                         callback=self.parse_post,
-                                         meta={'index':1,
-                                               'post_id': post_id,
-                                               'group':1})        
-            else:
-                for next_page in response.xpath(next_xpath):
-                    new_page = next_page.xpath('.//@href').extract()
-                    new_page = response.urljoin(new_page[0])
-                    self.logger.info('New page to be crawled {}'.format(new_page))
-                    yield scrapy.Request(new_page,
-                                         callback=self.parse_post,
-                                         meta={'index':1,
-                                               'post_id':post_id,
-                                               'group':group_flag})        
+        if bomb == 0:
+            for reply in response.xpath(path):
+                source = reply.xpath('.//h3/a/text()').extract()
+                answer = reply.xpath('.//a[contains(@href,"repl")]/@href').extract()
+                ans = response.urljoin(answer[::-1][0])
+                self.logger.info('{} nested comment'.format(str(response.meta['index'])))
+                yield scrapy.Request(ans,
+                                     callback=self.parse_reply,
+                                     priority=1000,
+                                     meta={'reply_to':source,
+                                           'url':response.url,
+                                           'index':response.meta['index'],
+                                           'flag':'init',
+                                           'post_id':response.meta['post_id'],
+                                           'group':group_flag})
+            #load regular comments     
+            if not response.xpath(path): #prevents from exec
+                path2 = './/div[string-length(@class) = 2 and count(@id)=1 and contains("0123456789", substring(@id,1,1)) and not(.//div[contains(@id,"comment_replies")])]'
+                for i,reply in enumerate(response.xpath(path2)):
+                    self.logger.info('{} regular comment'.format(i+1))
+                    new = ItemLoader(item=CommentsItem(),selector=reply)
+                    new.context['lang'] = self.lang           
+                    new.add_xpath('source','.//h3/a/text()')  
+                    new.add_xpath('source_url','.//h3/a/@href')   
+                    new.add_xpath('text','.//div[h3]/div[1]//text()')
+                    new.add_xpath('date','.//abbr/text()')
+                    new.add_xpath('reactions','.//a[contains(@href,"reaction/profile")]//text()')
+                    new.add_value('post_id', post_id)
+                    new.add_value('url',response.url)
+                    yield new.load_item()
+                
+            #new comment page
+            if not response.xpath(path):
+                #for groups
+                next_xpath = './/div[contains(@id,"see_next")]'
+                prev_xpath = './/div[contains(@id,"see_prev")]'
+                if not response.xpath(next_xpath) or group_flag == 1:
+                    for next_page in response.xpath(prev_xpath):
+                        new_page = next_page.xpath('.//@href').extract()
+                        new_page = response.urljoin(new_page[0])
+                        self.logger.info('New page to be crawled {}'.format(new_page))
+                        yield scrapy.Request(new_page,
+                                             callback=self.parse_post,
+                                             meta={'index':1,
+                                                   'post_id': post_id,
+                                                   'testpath': testpath,
+                                                   'group':1})        
+                else:
+                    for next_page in response.xpath(next_xpath):
+                        new_page = next_page.xpath('.//@href').extract()
+                        new_page = response.urljoin(new_page[0])
+                        self.logger.info('New page to be crawled {}'.format(new_page))
+                        yield scrapy.Request(new_page,
+                                             callback=self.parse_post,
+                                             meta={'index':1,
+                                                   'post_id':post_id,
+                                                   'testpath': testpath,
+                                                   'group':group_flag})        
         
     def parse_reply(self,response):
         '''
