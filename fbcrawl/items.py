@@ -610,9 +610,9 @@ class CommentsItem(scrapy.Item):
     post_id = scrapy.Field(
         output_processor=id_strip
     )
-    date = scrapy.Field(      # when was the post published
-        output_processor=parse_date2
-    )
+    date = scrapy.Field()      # when was the post published
+        #  output_processor=parse_date2
+    #  )
     text = scrapy.Field(
         output_processor=Join(separator=u'')
     )                       # full text of the post

@@ -20,15 +20,19 @@ class CommentsSpider(FacebookSpider):
     }
 
     def __init__(self, *args, **kwargs):
+        super().__init__(*args,**kwargs)
         if 'post' in kwargs and 'page' in kwargs:
             raise AttributeError('You need to specifiy only one between post and page')
         elif 'post' in kwargs:
             self.page = kwargs['post']
             self.type = 'post'
         elif 'page' in kwargs:
+            if self.page.find('/groups/') != -1:
+                self.group = 1
+            else:
+                self.group = 0
             self.type = 'page'
         
-        super().__init__(*args,**kwargs)
 
     def parse_page(self, response):
         '''
@@ -82,6 +86,7 @@ class CommentsSpider(FacebookSpider):
             else:
                 new_page = response.xpath("//div[2]/a[contains(@href,'timestart=') and not(contains(text(),'ent')) and not(contains(text(),number()))]/@href").extract()      
                 #this is why lang is needed     
+            #  self.logger.info(new_page)
 
             if not new_page: 
                 self.logger.info('[!] "more" link not found, will look for a "year" link')
@@ -139,21 +144,21 @@ class CommentsSpider(FacebookSpider):
         '''
         #load replied-to comments pages
         #select nested comment one-by-one matching with the index: response.meta['index']
-        self.logger.info(response.url)
+        #  self.logger.info(response.url)
         path = './/div[string-length(@class) = 2 and count(@id)=1 and contains("0123456789", substring(@id,1,1)) and .//div[contains(@id,"comment_replies")]]'  + '['+ str(response.meta['index']) + ']'
         #  testpath = './/div[string-length(@class) = 2 and count(@id)=1 and contains("0123456789", substring(@id,1,1)) and .//div[contains(@id,"comment_replies")]][1]'
         testpath = './/div[string-length(@class) = 2 and count(@id)=1 and contains("0123456789", substring(@id,1,1))]/@id'
         bomb = 0
         try:
             if response.xpath(testpath) != []:
-                self.logger.info(response.meta['testpath'])
-                self.logger.info(response.xpath(testpath).extract())
+                #  self.logger.info(response.meta['testpath'])
+                #  self.logger.info(response.xpath(testpath).extract())
                 if response.meta['testpath'] == response.xpath(testpath).extract():
                     bomb = 1
         except Exception:
             self.logger.info('seems ok to continue')
         try:
-            self.logger.info(response.meta['post_id'])
+            #  self.logger.info(response.meta['post_id'])
             post_id = response.meta['post_id']
         except Exception:
             self.logger.info('single post')
