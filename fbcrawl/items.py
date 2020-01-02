@@ -613,9 +613,12 @@ class FbcrawlItem(scrapy.Item):
 class CommentsItem(scrapy.Item):
     source = scrapy.Field()
     reply_to=scrapy.Field()
-    date = scrapy.Field(      # when was the post published
-        output_processor=parse_date2
+    post_id = scrapy.Field(
+        output_processor=id_strip
     )
+    date = scrapy.Field()      # when was the post published
+        #  output_processor=parse_date2
+    #  )
     text = scrapy.Field(
         output_processor=Join(separator=u'')
     )                       # full text of the post
