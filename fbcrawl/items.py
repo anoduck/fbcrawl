@@ -571,6 +571,9 @@ class FbcrawlItem(scrapy.Item):
     text = scrapy.Field(
         output_processor=Join(separator=u'')
     )                       # full text of the post
+    message = scrapy.Field(
+        output_processor=Join(separator=u'')
+    )                       # full text of the post
     comments = scrapy.Field(
         output_processor=comments_strip
     )
@@ -597,6 +600,9 @@ class FbcrawlItem(scrapy.Item):
     )
     share = scrapy.Field()                      # num of shares
     url = scrapy.Field(
+        output_processor=url_strip
+    )
+    newslink = scrapy.Field(
         output_processor=url_strip
     )
     post_id = scrapy.Field(

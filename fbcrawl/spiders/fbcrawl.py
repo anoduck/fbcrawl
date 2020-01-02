@@ -1,6 +1,5 @@
 import scrapy
 import logging
-
 from scrapy.loader import ItemLoader
 from scrapy.http import FormRequest
 from scrapy.exceptions import CloseSpider
@@ -13,8 +12,8 @@ class FacebookSpider(scrapy.Spider):
     '''    
     name = 'fb'
     custom_settings = {
-        'FEED_EXPORT_FIELDS': ['source','shared_from','date','text', \
-                               'reactions','likes','ahah','love','wow', \
+        'FEED_EXPORT_FIELDS': ['source','shared_from','date','text', 'message', \
+                               'reactions','likes','ahah','love','wow', 'newslink',\
                                'sigh','grrr','comments','post_id','url'],
         'DUPEFILTER_CLASS' : 'scrapy.dupefilters.BaseDupeFilter',
     }
@@ -232,9 +231,11 @@ class FacebookSpider(scrapy.Spider):
         new.context['lang'] = self.lang           
         new.add_xpath('source', "//td/div/h3/strong/a/text() | //span/strong/a/text() | //div/div/div/a[contains(@href,'post_id')]/strong/text()")
         new.add_xpath('shared_from','//div[contains(@data-ft,"top_level_post_id") and contains(@data-ft,\'"isShare":1\')]/div/div[3]//strong/a/text()')
-     #   new.add_xpath('date','//div/div/abbr/text()')
+        new.add_xpath('date','//div/div/abbr/text()')
         new.add_xpath('text','//div[@data-ft]//p//text() | //div[@data-ft]/div[@class]/div[@class]/text()')
-        
+        new.add_xpath('message', '//div[@data-ft]//div/table/tbody/tr/td[2]/h3/text()')
+        new.add_xpath('newslink', '//div[@data-ft]/a/@href')
+
         #check reactions for old posts
         check_reactions = response.xpath("//a[contains(@href,'reaction/profile')]/div/div/text()").get()
         if not check_reactions:
