@@ -8,8 +8,11 @@
 from scrapy.exceptions import DropItem
 from datetime import datetime
 
+
 class FbcrawlPipeline(object):
     pass
+
+
 #    def process_item(self, item, spider):
 #        if item['date'] < datetime(2017,1,1).date():
 #            raise DropItem("Dropping element because it's older than 01/01/2017")
