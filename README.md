@@ -1,25 +1,32 @@
+```bash
+ _______  ______   _______  _______  _______           _       
+(  ____ \(  ___ \ (  ____ \(  ____ )(  ___  )|\     /|( \      
+| (    \/| (   ) )| (    \/| (    )|| (   ) || )   ( || (      
+| (__    | (__/ / | |      | (____)|| (___) || | _ | || |      
+|  __)   |  __ (  | |      |     __)|  ___  || |( )| || |      
+| (      | (  \ \ | |      | (\ (   | (   ) || || || || |      
+| )      | )___) )| (____/\| ) \ \__| )   ( || () () || (____/\
+|/       |/ \___/ (_______/|/   \__/|/     \|(_______)(_______/
+
+```
+
 # fbcrawl
 Fbcrawl is an advanced crawler for Facebook, written in python, based on the [Scrapy](https://scrapy.org/) framework. 
 
 ## Status of Maintenance and upkeep
 
-For this solitary moment you may consider me, anoduck, an interim maintainer of this project. I am taking an unintentional sabbatical from my studies, and will attempt to perform some minor cleaning of this project. I will be merging several improvements from other forks of this project back into this one, and run some tests to discover feasability and usefulness of this projects. As of right now addition of other features for this project is out of the current intended scope. 
+For this solitary moment you may consider me, anoduck, an interim maintainer of this project. I am taking an unintentional sabbatical from my studies, and will attempt to perform some minor cleaning of this project. I will be merging several improvements from other forks of this project back into this one, and run some tests to discover feasability and usefulness of this project. As of right now addition of other features for this project is out of the current intended scope. 
 
-## DONATIONS
-Fbcrawl is free software. It is not "free as beer" nor "free as speech", it is "free as a toilet": it is always available and working, but someone as to keep it clean and tidy. Please consider to make a donation to the original author, so that he may return his attention to it and keep this project alive. Furthermore allowing him to get on with the [TODO](https://github.com/rugantio/fbcrawl/blob/master/README.md#TODO) list. One of his long-term goals is to refactor the framework with a gui, connections to databases and graph vizualitations. These tasks would take at least a couple of months of work, and he will be able to afford them only with your support! Thank you :)
-
-[![paypal](https://www.paypalobjects.com/en_US/IT/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=G96T8U8W7UZDL&currency_code=EUR&source=url)
+-----
 
 ## DISCLAIMER
 This software is not authorized by Facebook and doesn't follow Facebook's [robots.txt](https://www.facebook.com/robots.txt). Scraping without Facebook explicit written is a violation of the [terms and conditions on scraping](http://www.facebook.com/apps/site_scraping_tos_terms.php) and can potentially cause a [lawsuit](https://petewarden.com/2010/04/05/how-i-got-sued-by-facebook/)
 
 This software is provided as is, for educational purposes, to show how a crawler can be made to recursively parse a facebook page. Use at your own risk.
 
-# Introduction
+-----
 
-<div style="text-align:center">
-<img src="./trump.png" alt="Donald Trump" width="1080">
-</div>
+## Introduction
 
 EDIT: fbcrawl can now crawl comments! check out the "how to crawl comments" section!
 
@@ -27,14 +34,14 @@ What features can fbcrawl obtain? Everything that you see in the table is crawle
 
 Fbcrawl makes use of an static mobile version of facebook, unknown to many: [https://mbasic.facebook.com](https://mbasic.facebook.com) because it's all plain HTML and we can navigate easily through the pages without having to emulate a browser or inject javascript code.
 
-## Installation
+### Installation
 Requirements are: **python3** (python2 is also supported) and the  **scrapy** framework, that should pull other needed libs as dependencies (twisted, libxml2 etc.).
 
 Scrapy can be installed through the package manager of the distribution (in my arch box is simply called "scrapy") or through internal python package system, typing:
 
  ```pip install scrapy```
 
-## Architecture
+### Architecture
 The way scrapy works is through an engine that manages granularly every step of the crawling process.
 
 <img src="https://docs.scrapy.org/en/latest/_images/scrapy_architecture_02.png" width="800">
@@ -67,7 +74,7 @@ The project is thus divided in several files that serve different purposes:
 <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         **comments.py** -- implements the spider for comments
 
-## How to crawl a page (fbcrawl.py)
+### How to crawl a page (fbcrawl.py)
 The core of the crawler is this spider class, `fbcrawl`. On init, it navigates to `mbasic.facebook.com` and logs into facebook according to the provided `credentials`, passed as parameters at execution time (see "How to use"). Then the `parse_page` method is called with the `page` name given at runtime and the crawling process begins recursively retrieving all the posts found in every page. For each of the post it retrieves all the features, using the callback `parse_post`, and all the reactions, using `parse_reactions`.
 
 The webpage are parsed and the fields are extracted using **XPath** selectors. These selectors are implemented on the python lib `lxml` so they are very fast.
@@ -80,7 +87,7 @@ So the parse methods populates Item fields (to be explained in the next section)
 
 Refer to Scrapy's [Spider documentation](https://docs.scrapy.org/en/latest/topics/spiders.html) for more info.
 
-## Items (items.py)
+### Items (items.py)
 This file defines an Item class, so that the fields that we have extracted can be grouped in Items and organized in a more concise manner. Item objects are simple containers used to collect the scraped data. They provide a dictionary-like API with a convenient syntax for declaring their available fields.
 
 I have extracted every field present in the post elements and add a few local ones. Namely for each article we have:
@@ -104,7 +111,7 @@ Notice that this file is also used to modify the fields that we want to change b
 
 Also Refer to Scrapy's [Item documentation](https://docs.scrapy.org/en/latest/topics/items.html) for more info.
 
-## Settings (settings.py)
+### Settings (settings.py)
 Scrapy is a very powerful framework and it allows complex tweaking to be put in place. In this project we changed just only a handful of settings, but keep in mind that there are a lot of them.
 To make the crawler synchronous and get all the items one-by-one so that they are chronologically ordered in the final CSV you can set CONCURRENT_REQUESTS = 1 in settings.py.
 
@@ -120,7 +127,7 @@ FEED_EXPORT_FIELDS = ["source", "date", "text", "reactions","likes","ahah","love
 ```
 Scrapy's default behavior is to follow robots.txt guidelines, so we need to disable this by setting `ROBOTSTXT_OBEY = False`.
 
-## How to use
+### How to use
 
 Make sure that scrapy is installed, and clone this repository. Navigate through the project's top level directory and launch scrapy with:
 ```
@@ -148,7 +155,7 @@ Keep in mind that the default behavior is to append the items crawled at the bot
 
 More information regarding Scrapy's [Deployment](https://doc.scrapy.org/en/latest/topics/deploy.html) and [Common Practices](https://doc.scrapy.org/en/latest/topics/practices.html) are present in the official documentation.
 
-## How to crawl comments (comments.py)
+### How to crawl comments (comments.py)
 
 A new spider is now dedicated to crawl all the comments from a post (not a page!).
 
@@ -187,6 +194,12 @@ To enforce concurrency the `CONCURRENT_REQUESTS` parameter is set to `1`, this s
 
 Reactions are the total number of reactions that the comment gets, a finer subdivision in types of reactions is not implemented.
 
+### DONATIONS
+Fbcrawl is free software. It is not "free as beer" nor "free as speech", it is "free as a toilet": it is always available and working, but someone as to keep it clean and tidy. Please consider to make a donation to the original author, so that he may return his attention to it and keep this project alive. Furthermore allowing him to get on with the [TODO](https://github.com/rugantio/fbcrawl/blob/master/README.md#TODO) list. One of his long-term goals is to refactor the framework with a gui, connections to databases and graph vizualitations. These tasks would take at least a couple of months of work, and he will be able to afford them only with your support! Thank you :)
+
+[![paypal](https://www.paypalobjects.com/en_US/IT/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=G96T8U8W7UZDL&currency_code=EUR&source=url)
+
+-----
 
 # TODO
 ## Idea Brainstorm
@@ -215,13 +228,14 @@ Some other interesting features can be derived. Comments and commentators can be
 
 Better handling of data:
 * merge comments and posts and use JSON instead of CSV
-* add postgresql pipeline for simple CSV
+~~* add postgres pipeline for simple CSV~~
+** Been achieved by other user and is awaiting completion of pull request...
 * add mongodb pipeline for more complex JSON
 
 Integrate data visualization:
 * display reactions and other features (comments, shares etc.) as timeseries
-* add networkx or graph-tools support to display connections (features as links) between posts and people (nodes) 
-* inegrate gephi or save out to gephi
+* add networks or graph-tools support to display connections (features as links) between posts and people (nodes) 
+* integrate gephi or save out to gephi
 
 The script is not very user friendly:
 * create a gui using pyqt
