@@ -1,15 +1,12 @@
 # fbcrawl
 Fbcrawl is an advanced crawler for Facebook, written in python, based on the [Scrapy](https://scrapy.org/) framework. 
 
-# UNMAINTAINED
-For an undefined period I will be unable to review issues, fix bugs and merge pull requests. As I have been the sole contributor to the project, it's likely that the code will remain frozen at the current stage. 
+## Status of Maintenance and upkeep
 
-Anybody who is skilled enough and willing to partecipate, may open a dedicated issue or contact at my email address: rugantio AT gmail DOT com
-
-I will be back, but in the meantime I'd appreciate if this becomes a community project.
+For this solitary moment you may consider me, anoduck, an interim maintainer of this project. I am taking an unintentional sabbatical from my studies, and will attempt to perform some minor cleaning of this project. I will be merging several improvements from other forks of this project back into this one, and run some tests to discover feasability and usefulness of this projects. As of right now addition of other features for this project is out of the current intended scope. 
 
 ## DONATIONS
-Fbcrawl is free software. It is not "free as beer" nor "free as speech", it is "free as a toilet": it is always available and working, but someone as to keep it clean and tidy, and I am the only one at the moment, it is not a community project. Please consider make a donation, it will keep this project alive and if I see actual interest from people I will get on with the [TODO](https://github.com/rugantio/fbcrawl/blob/master/README.md#TODO) list. One of the my long-term goal is to refactor the framework with a gui, connections to databases and graph vizualitations. These tasks would take at least a couple of months of work, and I will be able to afford them only with your support! Thank you :)
+Fbcrawl is free software. It is not "free as beer" nor "free as speech", it is "free as a toilet": it is always available and working, but someone as to keep it clean and tidy. Please consider to make a donation to the original author, so that he may return his attention to it and keep this project alive. Furthermore allowing him to get on with the [TODO](https://github.com/rugantio/fbcrawl/blob/master/README.md#TODO) list. One of his long-term goals is to refactor the framework with a gui, connections to databases and graph vizualitations. These tasks would take at least a couple of months of work, and he will be able to afford them only with your support! Thank you :)
 
 [![paypal](https://www.paypalobjects.com/en_US/IT/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=G96T8U8W7UZDL&currency_code=EUR&source=url)
 
